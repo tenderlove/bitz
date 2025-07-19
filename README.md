@@ -1,6 +1,6 @@
 # Bitz
 
-A pure Ruby dynamic bitset implementation
+A pure Ruby, JIT-friendly dynamic bitset implementation
 
 ## Features
 

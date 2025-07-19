@@ -5,6 +5,23 @@ class BitzSetTest < Minitest::Test
     @set = Bitz::Set.new
   end
 
+  def test_each_bit
+    @set.set 2
+    @set.set 3
+    @set.set 10
+
+    list = []
+    @set.each_bit { |b| list << b }
+    assert_equal [2, 3, 10], list
+    assert_equal [2, 3, 10], @set.each_bit.to_a
+  end
+
+  def test_hash_eql
+    other = @set.dup
+    assert_equal @set.hash, other.hash
+    assert @set.eql?(other)
+  end
+
   def test_count
     assert_equal 0, @set.count
 

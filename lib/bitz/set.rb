@@ -185,6 +185,34 @@ module Bitz
       self
     end
 
+    # Iterates over each set bit in the bitset, yielding the bit position.
+    # Only bits that are set to 1 are yielded. Bits are yielded in ascending order.
+    # Returns an Enumerator if no block is given.
+    #
+    # @yield [Integer] the position of each set bit (0-indexed)
+    # @return [Enumerator, self] returns Enumerator if no block given, otherwise self
+    # @example
+    #   bitset = Bitz::Set.new
+    #   bitset.set(2)
+    #   bitset.set(5)
+    #   bitset.set(10)
+    #   bitset.each_bit { |bit| puts bit }  # prints 2, 5, 10
+    #   bitset.each_bit.to_a                # => [2, 5, 10]
+    def each_bit
+      return enum_for(__method__) unless block_given?
+
+      byte = 0
+      @buffer.each_byte { |b|
+        8.times { |bit|
+          if b & 0x1 == 0x1
+            yield byte + bit
+          end
+          b >>= 1
+        }
+        byte += 8
+      }
+    end
+
     # Compares this bitset with another for equality.
     # Returns false if the bitsets have different capacities.
     # Otherwise compares all bytes for exact equality.
@@ -196,6 +224,12 @@ module Bitz
       return false unless other.capacity == capacity
 
       @buffer == other.buffer
+    end
+
+    alias :eql? :==
+
+    def hash
+      @buffer.hash
     end
 
     protected
