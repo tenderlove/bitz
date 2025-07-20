@@ -296,7 +296,7 @@ module Bitz
     #
     # @param pp [PP] the pretty printer object
     # @return [void]
-    def pretty_print(pp)
+    def pretty_print pp
       pp.text(to_ascii(width: 32))
     end
 
