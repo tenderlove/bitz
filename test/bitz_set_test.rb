@@ -719,4 +719,169 @@ class BitzSetTest < Minitest::Test
     copy.set(30)
     refute_equal @set, copy
   end
+
+  def test_to_ascii_basic
+    @set.set(1)
+    @set.set(5)
+    @set.set(10)
+
+    output = @set.to_ascii(width: 16)
+
+    # Should contain bit indices
+    assert_match(/Bit Index:/, output)
+    assert_match(/Bit Value:/, output)
+
+    # Should contain specific bit positions
+    assert_match(/\s+1\s+/, output)
+    assert_match(/\s+5\s+/, output)
+    assert_match(/\s+10\s+/, output)
+
+    # Should have proper formatting with separators
+    assert_match(/\|/, output)
+    assert_match(/\+/, output)
+  end
+
+  def test_to_ascii_empty_set
+    output = @set.to_ascii(width: 16)
+
+    # Should show all zeros in the value line
+    lines = output.split("\n")
+    value_line = lines.find { |line| line.start_with?("Bit Value:") }
+
+    # Should contain only 0s in the value line (no 1s)
+    assert_match(/0/, value_line)
+    refute_match(/\|\s+[^0\s]/, value_line) # No non-zero values between separators
+
+    assert_match(/Bit Index:/, output)
+    assert_match(/Bit Value:/, output)
+  end
+
+  def test_to_ascii_full_set
+    small_set = Bitz::Set.new(16)
+    small_set.set_all
+
+    output = small_set.to_ascii(width: 16)
+
+    # Should show all ones for a full set
+    lines = output.split("\n")
+    value_line = lines.find { |line| line.start_with?("Bit Value:") }
+
+    # Count the 1s in the value line (look for the pattern "  1")
+    ones_count = value_line.scan(/\s+1(?=\s|\|)/).length
+    assert_equal 16, ones_count
+  end
+
+  def test_to_ascii_custom_width
+    @set.set(2)
+    @set.set(10)
+    @set.set(18)
+
+    # Test with 8-bit width
+    output = @set.to_ascii(width: 8)
+    lines = output.split("\n")
+
+    # Should have multiple rows for bits beyond width
+    assert_operator lines.length, :>, 3
+
+    # First row should contain bits 0-7
+    assert_match(/\s+2\s+/, lines[0])
+    refute_match(/\s+a\s+/, lines[0])  # 10 in hex should not be in first row
+  end
+
+  def test_to_ascii_start_offset
+    @set.set(10)
+    @set.set(15)
+    @set.set(20)
+
+    # Start from bit 8
+    output = @set.to_ascii(width: 16, start: 8)
+
+    # Should contain bits 8-23 (in hex: 8, a=10, f=15, 14=20)
+    assert_match(/\s+a\s+/, output)  # 10 in hex
+    assert_match(/\s+f\s+/, output)  # 15 in hex
+    assert_match(/\s+14\s+/, output) # 20 in hex
+
+    # Should not contain bits 0-7 in the index line
+    lines = output.split("\n")
+    index_line = lines[0]
+    refute_match(/\|\s+0\s+/, index_line)
+    refute_match(/\|\s+7\s+/, index_line)
+  end
+
+  def test_to_ascii_byte_grouping
+    @set.set(7)  # End of first byte
+    @set.set(8)  # Start of second byte
+
+    output = @set.to_ascii(width: 16)
+
+    # Should have proper byte separators
+    separators = output.scan(/\|/).length
+    assert_operator separators, :>, 2 # At least opening and closing separators
+
+    # Should group by 8-bit boundaries
+    lines = output.split("\n")
+    index_line = lines[0]
+
+    # Should have bit 7 and 8 in different groups visually
+    assert_match(/\s+7\s+.*\|\s+8\s+/, index_line)
+  end
+
+  def test_to_ascii_large_indices
+    large_set = Bitz::Set.new(128)
+    large_set.set(100)
+    large_set.set(127)
+
+    output = large_set.to_ascii(width: 32, start: 96)
+
+    # Should handle 2-digit hex indices correctly (100 = 0x64, 127 = 0x7f)
+    assert_match(/64/, output) # 100 in hex
+    assert_match(/7f/, output) # 127 in hex
+
+    # Should maintain alignment
+    lines = output.split("\n")
+    index_line = lines[0]
+    value_line = lines[1]
+
+    # Lines should be similar length (within a few chars for borders)
+    assert_in_delta index_line.length, value_line.length, 5
+  end
+
+  def test_to_ascii_edge_cases
+    # Single bit set
+    single_set = Bitz::Set.new(8)
+    single_set.set(0)
+
+    output = single_set.to_ascii(width: 8)
+    assert_match(/Bit Index:/, output)
+    assert_match(/Bit Value:/, output)
+
+    # Empty range
+    empty_output = @set.to_ascii(width: 0)
+    assert_equal "Empty bitset\n", empty_output
+
+    # Start beyond capacity
+    beyond_output = @set.to_ascii(start: 1000)
+    assert_equal "Empty bitset\n", beyond_output
+  end
+
+  def test_pp_integration
+    require 'pp'
+    require 'stringio'
+
+    @set.set(1)
+    @set.set(5)
+    @set.set(10)
+
+    # Capture pp output
+    output = StringIO.new
+    PP.pp(@set, output)
+    result = output.string
+
+    # Should contain the ASCII art format
+    assert_match(/Bit Index:/, result)
+    assert_match(/Bit Value:/, result)
+    assert_match(/\s+1\s+/, result)  # 1 in hex is still 1
+    assert_match(/\s+5\s+/, result)  # 5 in hex is still 5
+    assert_match(/\s+a\s+/, result)  # 10 in hex is 'a'
+  end
 end

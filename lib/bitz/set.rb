@@ -213,6 +213,93 @@ module Bitz
       }
     end
 
+    # Returns an ASCII art representation of the bitset.
+    # Displays bit indices (in hexadecimal) on top and bit values on bottom in a table format.
+    # Groups bits by bytes (8 bits) with visual separators.
+    #
+    # @param width [Integer] number of bits to display per row (default: 64)
+    # @param start [Integer] starting bit position to display (default: 0)
+    # @return [String] formatted ASCII art table
+    # @example
+    #   bitset = Bitz::Set.new(16)
+    #   bitset.set(1)
+    #   bitset.set(5)
+    #   bitset.set(10)
+    #   puts bitset.to_ascii(width: 16)
+    #   # Output:
+    #   # Bit Index: |  0  1  2  3  4  5  6  7 |  8  9  a  b  c  d  e  f |
+    #   # Bit Value: |  0  1  0  0  0  1  0  0 |  0  0  1  0  0  0  0  0 |
+    #   #            +------------------------+------------------------+
+    def to_ascii width: 64, start: 0
+      lines = []
+      end_bit = [start + width, capacity].min
+      total_bits = end_bit - start
+
+      return "Empty bitset\n" if total_bits <= 0
+
+      # Calculate number of byte groups
+      byte_groups = (total_bits + 7) / 8
+
+      # Build index line
+      index_line = "Bit Index: "
+      value_line = "Bit Value: "
+      border_line = "           "
+
+      byte_groups.times do |group|
+        group_start = start + (group * 8)
+        group_end = [group_start + 8, end_bit].min
+
+        index_line += "|"
+        value_line += "|"
+        border_line += "+"
+
+        (group_start...group_end).each do |bit_pos|
+          index_line += sprintf("%3x", bit_pos)
+          value_line += sprintf("%3d", set?(bit_pos) ? 1 : 0)
+          border_line += "---"
+        end
+
+        # Pad incomplete byte groups
+        if group_end - group_start < 8
+          padding = 8 - (group_end - group_start)
+          index_line += "   " * padding
+          value_line += "   " * padding
+          border_line += "---" * padding
+        end
+
+        index_line += " "
+        value_line += " "
+        border_line += "-"
+      end
+
+      index_line += "|\n"
+      value_line += "|\n"
+      border_line += "+\n"
+
+      lines << index_line
+      lines << value_line
+      lines << border_line
+
+      # Handle multi-row output for large bitsets
+      if end_bit < capacity && width < capacity
+        remaining = capacity - end_bit
+        if remaining > 0
+          lines << to_ascii(width: width, start: end_bit)
+        end
+      end
+
+      lines.join
+    end
+
+    # Ruby's pp library integration.
+    # Called by pp when pretty printing this object.
+    #
+    # @param pp [PP] the pretty printer object
+    # @return [void]
+    def pretty_print(pp)
+      pp.text(to_ascii(width: 32))
+    end
+
     # Compares this bitset with another for equality.
     # Returns false if the bitsets have different capacities.
     # Otherwise compares all bytes for exact equality.
