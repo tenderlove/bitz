@@ -6,7 +6,7 @@ A pure Ruby, JIT-friendly dynamic bitset implementation
 
 - **Dynamic resizing**: Automatically grows buffer as needed when setting bits
 - **Memory efficient**: Uses packed byte arrays for optimal memory usage
-- **Ruby-idiomatic**: Standard operators (`&`, `|`, `!`) and method chaining support
+- **Ruby-idiomatic**: Standard operators (`&`, `|`, `~`) and method chaining support
 - **0-indexed**: Bit positions start from 0, following standard conventions
 
 ## Installation
@@ -127,7 +127,7 @@ intersection_result = set1 & set2
 # set1 and set2 are unchanged
 
 # Complement/NOT (creates new bitset with all bits flipped)
-complement_result = !set1
+complement_result = ~set1
 # complement_result has all bits flipped - bits 0, 3, 4, 5, ..., 63 are set
 # set1 is unchanged
 ```
@@ -174,7 +174,7 @@ copy.set?(5)       # => true (copy has original's bits)
 
 - `|(other)` - Union operator (returns new bitset)
 - `&(other)` - Intersection operator (returns new bitset)
-- `!` - Complement/NOT operator (returns new bitset with all bits flipped)
+- `~` - Complement/NOT operator (returns new bitset with all bits flipped)
 
 ### Copying
 

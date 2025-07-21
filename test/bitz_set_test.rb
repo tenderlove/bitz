@@ -411,11 +411,11 @@ class BitzSetTest < Minitest::Test
     assert_equal 3, result.count # bits 1, 2, 3 are set
   end
 
-  def test_bang_basic
+  def test_tilde_basic
     @set.set(5)
     @set.set(10)
 
-    result = !@set
+    result = ~@set
 
     # Original bitset unchanged
     assert @set.set?(5)
@@ -432,8 +432,8 @@ class BitzSetTest < Minitest::Test
     assert_equal 62, result.count # 64 - 2 set bits
   end
 
-  def test_bang_empty_set
-    result = !@set
+  def test_tilde_empty_set
+    result = ~@set
 
     # Original bitset unchanged (empty)
     assert_equal 0, @set.count
@@ -443,10 +443,10 @@ class BitzSetTest < Minitest::Test
     assert_equal 64, result.count
   end
 
-  def test_bang_full_set
+  def test_tilde_full_set
     @set.set_all
 
-    result = !@set
+    result = ~@set
 
     # Original bitset unchanged (full)
     assert_equal 64, @set.count
@@ -456,20 +456,20 @@ class BitzSetTest < Minitest::Test
     assert_equal 0, result.count
   end
 
-  def test_bang_returns_new_instance
-    result = !@set
+  def test_tilde_returns_new_instance
+    result = ~@set
 
     refute_same @set, result
     assert_instance_of Bitz::Set, result
     assert_equal @set.capacity, result.capacity
   end
 
-  def test_bang_double_negation
+  def test_tilde_double_negation
     @set.set(5)
     @set.set(10)
     @set.set(20)
 
-    result = !!@set
+    result = ~~@set
 
     # Double negation should restore original
     assert result.set?(5)
@@ -484,12 +484,12 @@ class BitzSetTest < Minitest::Test
     assert_equal 3, @set.count
   end
 
-  def test_bang_specific_capacity
+  def test_tilde_specific_capacity
     small_set = Bitz::Set.new(16)
     small_set.set(3)
     small_set.set(7)
 
-    result = !small_set
+    result = ~small_set
 
     # Check capacity preserved
     assert_equal 16, result.capacity

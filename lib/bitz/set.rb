@@ -168,7 +168,7 @@ module Bitz
     # The original bitset is not modified.
     #
     # @return [Bitz::Set] a new bitset with all bits flipped
-    def !
+    def ~
       dup.toggle_all
     end
 
