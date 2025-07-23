@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  ruby-versions:
+    uses: ruby/actions/.github/workflows/ruby_versions.yml@master
+
+  test:
+    needs: ruby-versions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        ruby: ${{ fromJson(needs.ruby-versions.outputs.versions) }}
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Ruby
+        uses: ruby/setup-ruby-pkgs@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          apt-get: "haveged libyaml-dev"
+          brew: libyaml
+          vcpkg: libyaml
+      
+      - name: Run tests
+        run: bundle exec rake test
