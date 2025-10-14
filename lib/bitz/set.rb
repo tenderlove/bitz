@@ -307,6 +307,7 @@ module Bitz
     # @param other [Object] the object to compare with
     # @return [Boolean] true if bitsets are equal, false otherwise
     def == other
+      return true if equal?(other)
       return false unless other.is_a?(self.class)
       return false unless other.capacity == capacity
 
