@@ -307,11 +307,9 @@ module Bitz
     # @param other [Object] the object to compare with
     # @return [Boolean] true if bitsets are equal, false otherwise
     def == other
-      return true if equal?(other)
-      return false unless other.is_a?(self.class)
-      return false unless other.capacity == capacity
-
-      @buffer == other.buffer
+      super || (other.is_a?(self.class) &&
+        other.capacity == capacity &&
+        @buffer == other.buffer)
     end
 
     alias :eql? :==
@@ -336,6 +334,5 @@ module Bitz
       n = (n + (n >> 4)) & 0x0F          # 00001111 - count whole byte
       n
     end
-
   end
 end
